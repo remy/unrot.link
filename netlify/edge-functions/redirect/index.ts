@@ -9,7 +9,7 @@ export const config: Config = {
 };
 
 function index(req: Request) {
-  return new URL('/index', req.url);
+  return new URL('/index.html', req.url);
 }
 
 export default async function (req: Request, { next }: Context) {
