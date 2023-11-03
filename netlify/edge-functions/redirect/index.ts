@@ -10,6 +10,9 @@ export const config: Config = {
 
 function index() {
   return new Response('<title>unrot.link</title><p>Hello world', {
+    headers: {
+      'content-type': 'text/html',
+    },
     status: 200,
   });
 }
