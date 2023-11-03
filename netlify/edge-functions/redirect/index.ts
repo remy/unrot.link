@@ -8,20 +8,15 @@ export const config: Config = {
   path: '/',
 };
 
-function index() {
-  return new Response('<title>unrot.link</title><p>Hello world', {
-    headers: {
-      'content-type': 'text/html',
-    },
-    status: 200,
-  });
+function index(req: Request) {
+  return new URL('/index', req.url);
 }
 
 export default async function (req: Request, { next }: Context) {
   const referer: string = req.headers.get('referer') || '';
 
   if (!referer) {
-    return index();
+    return index(req);
   }
 
   const root = new URL(referer);
@@ -33,7 +28,7 @@ export default async function (req: Request, { next }: Context) {
 
     // return the index page
     if (urlParam === null) {
-      return index();
+      return index(req);
     }
 
     // TODO if we have a url param we should try to validate the referrer
