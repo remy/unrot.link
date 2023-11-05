@@ -5,12 +5,12 @@ document.body.addEventListener(
     /** @type HTMLElement */
     let target = event.target.closest('a[href]');
 
-    if (target && target.nodeName === 'A') {
+    if (target) {
       /** @type String */
       let href = target.attributes.href.value;
 
       if (!href.startsWith('http')) {
-        // ignore it
+        // ignore relative urls
         return;
       }
 
@@ -25,9 +25,7 @@ document.body.addEventListener(
       const date = hEntry.querySelector('.dt-published[datetime]');
 
       if (date) {
-        target.href = `https://unrot.link/?url=${href}&date=${date.dateTime
-          .split(' ')
-          .shift()}`;
+        target.href = `https://unrot.link/?url=${href}&date=${date.dateTime}`;
       } else {
         target.href = `https://unrot.link/?url=${href}`;
       }
