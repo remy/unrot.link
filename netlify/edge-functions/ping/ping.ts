@@ -5,6 +5,8 @@ export default function () {
     status: 206,
     headers: {
       'cache-control': `public, s-maxage=${3600 * 24}`, // 1 day
+      'access-control-allow-origin': '*',
+      'access-control-allow-methods': 'HEAD',
     },
   });
 }
