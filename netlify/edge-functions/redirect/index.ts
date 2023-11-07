@@ -21,6 +21,7 @@ if (Deno.env.get('NETLIFY_DEV')) {
 // this is the netlify path config, nothing more
 export const config: Config = {
   path: '/',
+  cache: 'manual',
 };
 
 function index(req: Request) {
@@ -41,7 +42,7 @@ export default async function (req: Request, { next }: Context) {
   const root = new URL(referer);
 
   if (!approved(referer)) {
-    return Response.redirect('/token', 302);
+    return Response.redirect('/access', 302);
   }
 
   const acceptsHTML = req.headers.get('accept')?.includes('text/html');
@@ -69,8 +70,6 @@ export default async function (req: Request, { next }: Context) {
     if (urlParam === null) {
       return index(req);
     }
-
-    // TODO if we have a url param we should try to validate the referrer
 
     const res = await next({ sendConditionalRequest: true });
 
