@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>unrot.link</title>
+    <link rel="stylesheet" href="/static/font.css">
+    <link rel="stylesheet" href="/static/style.css">
+  </head>
+
+  <body id="{{ page.fileSlug }}">
+    <main>
+      <nav>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/try">Try it</a></li>
+          <li><a href="/token">Get token</a></li>
+          <li><a href="/docs">Docs</a></li>
+        </ul>
+      </nav>
+      {{ content | safe }}
+    </main>
+    <footer>
+      <p>Built by <a title="for old links 👵 " href="https://remysharp.com">@rem</a> <span class="more">//</span> <a href="/about">About</a></p>
+    </footer>
+  </body>
+
+</html>

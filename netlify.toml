@@ -1,0 +1,5 @@
+[context.dev]
+publish = '_site/'
+
+[dev]
+targetPort = 8082

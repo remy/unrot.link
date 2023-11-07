@@ -1,7 +1,12 @@
-// @ts-expect-error
 import type { Config, Context } from 'https://edge.netlify.com';
 
 const defaultTimeout = 2000;
+
+const preApproved = ['remysharp.com', 'unrot.link'];
+
+if (Deno.env.get('NETLIFY_DEV')) {
+  preApproved.push('localhost');
+}
 
 // this is the netlify path config, nothing more
 export const config: Config = {
@@ -12,6 +17,10 @@ function index(req: Request) {
   return new URL('/index.html', req.url);
 }
 
+function approved(referer: string) {
+  return preApproved.some((domain) => referer.includes(domain));
+}
+
 export default async function (req: Request, { next }: Context) {
   const referer: string = req.headers.get('referer') || '';
 
@@ -20,6 +29,28 @@ export default async function (req: Request, { next }: Context) {
   }
 
   const root = new URL(referer);
+
+  if (!approved(referer)) {
+    return Response.redirect('/token', 302);
+  }
+
+  const acceptsHTML = req.headers.get('accept')?.includes('text/html');
+
+  // A helper function to generate a response depending on the request accept
+  // header and if they don't (i.e. XHR) then we'll return JSON
+  const redirect = (url: string, status: number) => {
+    if (acceptsHTML) {
+      const res = Response.redirect(url, status);
+      res.headers.set('Referer', referer || '');
+      return res;
+    } else {
+      return new Response(JSON.stringify({ status, url }), {
+        headers: {
+          'content-type': 'application/json',
+        },
+      });
+    }
+  };
 
   try {
     // Get the URL from the query string parameter 'url'
@@ -63,7 +94,7 @@ export default async function (req: Request, { next }: Context) {
     // Check the status code of the response
     if (status === 200) {
       // the target page is fine, so redirect to it as a perma-redirect
-      return Response.redirect(urlParam, 301);
+      return redirect(urlParam, 301);
     } else {
       // If the status code is not 200, fetch the Wayback Machine CDX API
       let waybackUrl = `https://web.archive.org/cdx/search/cdx?output=json&filter=statuscode:200&url=${encodeURIComponent(
@@ -74,11 +105,12 @@ export default async function (req: Request, { next }: Context) {
       // good representative of the page at the time
       const date = url.searchParams.get('date');
       if (date) {
-        waybackUrl += `from=${date.replace(/\D/g, '')}&limit=1`;
-      } else {
-        // otherwise just take the last 200
-        waybackUrl += `limit=-1`;
+        waybackUrl += `from=${date.replace(/\D/g, '')}&`;
       }
+
+      // then just take one result (ideally we use -1, but this doesn't
+      // reliably work) - sometimes it gives zero results
+      waybackUrl += `limit=1`;
 
       const waybackResponse = await fetch(waybackUrl, {
         headers: {
@@ -86,9 +118,11 @@ export default async function (req: Request, { next }: Context) {
         },
       });
       const waybackData = (await waybackResponse.json()) as [
-        String[],
-        String[]
+        string[],
+        string[]
       ];
+
+      console.log('[wayback] ' + waybackUrl, waybackData);
 
       // Check if the Wayback Machine response includes a value of 200
       if (waybackData && waybackData.length > 1 && waybackData[1]) {
@@ -96,16 +130,16 @@ export default async function (req: Request, { next }: Context) {
         const waybackUrl = new URL(
           `https://web.archive.org/web/${waybackData[1][1]}/${waybackData[1][2]}`
         );
-        return Response.redirect(waybackUrl, 301);
+        return redirect(waybackUrl.toString(), 301);
       } else {
         // fail: sending 302 to original URL, unknown
-        return Response.redirect(targetUrl, 302);
+        return redirect(targetUrl.toString(), 302);
       }
     }
   } catch (error) {
     // Handle any errors that occur during the execution
     console.log('[fail] errored: ' + error.message);
-    return Response.redirect(root, 500);
+    return redirect(root.toString(), 500);
   }
 }
 

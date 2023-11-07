@@ -3,7 +3,7 @@ document.body.addEventListener(
   'click',
   (event) => {
     /** @type HTMLElement */
-    let target = event.target.closest('a[href]');
+    const target = event.target.closest('a[href]');
 
     if (target) {
       /** @type String */
@@ -22,13 +22,16 @@ document.body.addEventListener(
       href = encodeURIComponent(href);
 
       const hEntry = target.closest('.h-entry');
-      const date = hEntry.querySelector('.dt-published[datetime]');
 
-      if (date) {
-        target.href = `https://unrot.link/?url=${href}&date=${date.dateTime}`;
-      } else {
-        target.href = `https://unrot.link/?url=${href}`;
+      if (hEntry) {
+        const date = hEntry.querySelector('.dt-published[datetime]');
+        if (date) {
+          target.href = `https://unrot.link/?url=${href}&date=${date.dateTime}`;
+          return;
+        }
       }
+
+      target.href = `https://unrot.link/?url=${href}`;
     }
   },
   true
