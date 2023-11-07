@@ -1,3 +1,13 @@
+/**
+ * Redirects the user to a URL based on the `url` query parameter, with optional
+ * Wayback Machine support.
+ * If the `referer` header is not present or not approved, the user is redirected
+ * to the index page.
+ * If the target URL is not reachable, the user is redirected to the Wayback
+ * Machine version of the URL (if available).
+ * If the Wayback Machine version is not available, the user is redirected to the
+ * original URL with a 302 status code.
+ **/
 import type { Config, Context } from 'https://edge.netlify.com';
 
 const defaultTimeout = 2000;
@@ -40,19 +50,7 @@ export default async function (req: Request, { next }: Context) {
   // header and if they don't (i.e. XHR) then we'll return JSON
   const redirect = (url: string, status: number) => {
     if (acceptsHTML) {
-      console.log('[redirect] ' + url, status);
       return Response.redirect(url, status);
-      const res = new Response(null, {
-        status,
-        headers: {
-          location: url,
-          referer: referer || '',
-        },
-      });
-
-      console.log(res);
-
-      return res;
     } else {
       return new Response(JSON.stringify({ status, url }), {
         headers: {
@@ -132,8 +130,6 @@ export default async function (req: Request, { next }: Context) {
         string[]
       ];
 
-      console.log('[wayback] ' + waybackUrl, waybackData);
-
       // Check if the Wayback Machine response includes a value of 200
       if (waybackData && waybackData.length > 1 && waybackData[1]) {
         // Redirect to the URL from Wayback Machine
@@ -149,7 +145,7 @@ export default async function (req: Request, { next }: Context) {
   } catch (error) {
     // Handle any errors that occur during the execution
     console.log('[fail] errored: ' + error.message);
-    return Response.redirect(root.toString(), 500);
+    return Response.redirect(root, 500);
   }
 }
 
