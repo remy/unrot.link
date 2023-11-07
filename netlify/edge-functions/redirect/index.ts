@@ -40,8 +40,18 @@ export default async function (req: Request, { next }: Context) {
   // header and if they don't (i.e. XHR) then we'll return JSON
   const redirect = (url: string, status: number) => {
     if (acceptsHTML) {
-      const res = Response.redirect(url, status);
-      res.headers.set('Referer', referer || '');
+      console.log('[redirect] ' + url, status);
+      return Response.redirect(url, status);
+      const res = new Response(null, {
+        status,
+        headers: {
+          location: url,
+          referer: referer || '',
+        },
+      });
+
+      console.log(res);
+
       return res;
     } else {
       return new Response(JSON.stringify({ status, url }), {
@@ -139,7 +149,7 @@ export default async function (req: Request, { next }: Context) {
   } catch (error) {
     // Handle any errors that occur during the execution
     console.log('[fail] errored: ' + error.message);
-    return redirect(root.toString(), 500);
+    return Response.redirect(root.toString(), 500);
   }
 }
 
