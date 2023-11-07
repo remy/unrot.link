@@ -21,7 +21,6 @@ if (Deno.env.get('NETLIFY_DEV')) {
 // this is the netlify path config, nothing more
 export const config: Config = {
   path: '/',
-  cache: 'manual',
 };
 
 function index(req: Request) {
