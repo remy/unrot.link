@@ -34,7 +34,10 @@ function approved(referer: string) {
 export default async function (req: Request, { next }: Context) {
   const referer: string = req.headers.get('referer') || '';
 
+  console.log(req.headers, referer);
+
   if (!referer) {
+    console.log('returning homepage');
     return index(req);
   }
 
@@ -66,6 +69,7 @@ export default async function (req: Request, { next }: Context) {
 
   // return the index page
   if (urlParam === null) {
+    console.log(req.url, url, urlParam);
     return index(req);
   }
 

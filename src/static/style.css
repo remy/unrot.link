@@ -110,8 +110,9 @@ input[type='color']::-webkit-color-swatch {
 output {
   display: block;
   /* text-align: right; */
-  padding: 14px;
+  padding: 24px;
   border: 1px solid black;
+  border-radius: 4px;
   background: #fff;
 }
 
@@ -120,7 +121,7 @@ output:empty {
 }
 
 output p {
-  margin: 12px;
+  margin: 0px;
   text-wrap: break-word;
   overflow-wrap: anywhere;
 }
@@ -253,7 +254,19 @@ pre {
   padding: 8px;
   border-radius: 4px;
   overflow: scroll;
-  height: 20vh;
+  /* height: 20vh; */
+}
+
+code {
+  font-family: 'ubuntu mono', 'Courier New', Courier, monospace;
+  font-size: 1.1rem;
+  background-color: #ececec;
+  outline: 2px solid #ececec;
+}
+
+pre code {
+  background-color: transparent;
+  outline: none;
 }
 
 hr {
@@ -351,7 +364,9 @@ nav li a {
 }
 
 .helper {
+  background-color: white;
   border: 1px solid black;
+  border-radius: 2px;
   padding: 20px;
 
   p:first-of-type {
@@ -387,11 +402,53 @@ label {
 }
 
 #try form {
-  margin: 28px 0 56px 0;
+  margin: 28px 0;
+}
+
+#try form + output:empty + p {
+  margin-top: 56px;
+}
+
+#try form + output:not(:empty) {
+  margin-top: 28px;
+}
+
+form button:disabled {
+  cursor: wait;
+  transition: opacity 0.3s ease;
+  background-size: 30px 30px;
+  background-image: linear-gradient(
+    45deg,
+    rgba(0, 0, 0, 0.1) 25%,
+    transparent 25%,
+    transparent 50%,
+    rgba(0, 0, 0, 0.1) 50%,
+    rgba(0, 0, 0, 0.1) 75%,
+    transparent 75%,
+    transparent
+  );
+  animation: loading 0.5s linear infinite;
+  color: #aaa;
+  background-color: white;
+  border-color: #ccc;
+}
+
+@keyframes loading {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 60px 30px;
+  }
 }
 
 #logo {
   margin: 0;
   width: 48px;
   height: 48px;
+}
+
+fieldset {
+  border: 0;
+  padding: 0;
 }
