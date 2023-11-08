@@ -25,6 +25,10 @@ form.addEventListener('submit', (event) => {
 document.querySelector('#try').addEventListener(
   'click',
   (event) => {
+    if (event.target.tagName !== 'A') {
+      return;
+    }
+
     if (event.target.dataset.ignore) {
       return;
     }
@@ -34,7 +38,7 @@ document.querySelector('#try').addEventListener(
     }
 
     const href = event.target.href;
-    form.querySelector('input[name="url"]').value = href;
+    form.querySelector('input[name="url"]').setAttribute('value', href);
     submit(form);
     event.preventDefault();
   },

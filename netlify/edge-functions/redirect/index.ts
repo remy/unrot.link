@@ -60,16 +60,16 @@ export default async function (req: Request, { next }: Context) {
     }
   };
 
+  // Get the URL from the query string parameter 'url'
+  const url = new URL(req.url);
+  const urlParam = url.searchParams.get('url');
+
+  // return the index page
+  if (urlParam === null) {
+    return index(req);
+  }
+
   try {
-    // Get the URL from the query string parameter 'url'
-    const url = new URL(req.url);
-    const urlParam = url.searchParams.get('url');
-
-    // return the index page
-    if (urlParam === null) {
-      return index(req);
-    }
-
     const res = await next({ sendConditionalRequest: true });
 
     const useWayback = !!url.searchParams.get('wayback');
@@ -83,7 +83,12 @@ export default async function (req: Request, { next }: Context) {
       return res;
     }
 
-    const targetUrl = new URL(urlParam);
+    let targetUrl = null;
+    try {
+      targetUrl = new URL(urlParam);
+    } catch (_) {
+      return redirect(root.toString() + '?bad-url=' + urlParam, 302);
+    }
 
     let status = 0;
 
@@ -143,7 +148,7 @@ export default async function (req: Request, { next }: Context) {
   } catch (error) {
     // Handle any errors that occur during the execution
     console.log('[fail] errored: ' + error.message);
-    return Response.redirect(root, 500);
+    return redirect(root.toString() + '?source=unrot.link-failed', 302);
   }
 }
 
