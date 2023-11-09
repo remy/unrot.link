@@ -269,6 +269,10 @@ pre code {
   outline: none;
 }
 
+ul {
+  padding-inline-start: 16px;
+}
+
 hr {
   border: 0;
   border-bottom: 1px solid #d3d3d3;

@@ -35,6 +35,8 @@ form.addEventListener('submit', (event) => {
 document.querySelector('#try').addEventListener(
   'click',
   (event) => {
+    console.log('try first');
+
     if (event.target.tagName !== 'A') {
       return;
     }
@@ -53,8 +55,9 @@ document.querySelector('#try').addEventListener(
 
     const href = event.target.href;
     form.querySelector('input[name="url"]').value = href;
-    submit(form);
     event.preventDefault();
+    event.stopPropagation();
+    submit(form);
   },
   true
 );

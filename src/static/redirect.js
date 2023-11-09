@@ -52,7 +52,9 @@ if (globalThis.fetch) {
               }
             }
           },
-          true
+          {
+            passive: true,
+          }
         );
       }
     })
