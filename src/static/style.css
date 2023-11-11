@@ -323,9 +323,10 @@ nav li a {
       width: 10px;
       height: 10px;
       left: 0;
-      top: 50%;
+      top: 1rem;
       margin-top: -8px;
       border: 2px solid #717171;
+      background-color: white;
       border-radius: 8px;
     }
 
@@ -335,7 +336,7 @@ nav li a {
       position: absolute;
       width: 0;
       height: 0;
-      top: 50%;
+      top: 1rem;
       left: 8px;
       margin-top: 0;
       background: #007aff;

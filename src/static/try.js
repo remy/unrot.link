@@ -9,6 +9,7 @@ async function submit(form) {
   form.querySelector('fieldset').disabled = true;
 
   try {
+    const startTime = performance.now();
     const res = await fetch(form.action + '?' + searchParams.toString(), {
       headers: {
         'Content-Type': 'application/json',
@@ -16,8 +17,12 @@ async function submit(form) {
     });
     const json = await res.json();
 
+    const delta = performance.now() - startTime;
+    json.time = delta;
+
     document.querySelector('output').innerHTML = `
     <p>Rewritten URL:<br><a href="${json.url}">${json.url}</a></p>
+    <p>Response time: ${delta.toFixed(2)}ms</p>
     `;
   } catch (_) {
     // nop
