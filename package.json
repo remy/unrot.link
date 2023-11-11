@@ -9,6 +9,9 @@
   "devDependencies": {
     "markdown-it": "^13.0.2",
     "markdown-it-attrs": "^4.1.6",
-    "netlify-cli": "^17.1.0"
+    "netlify-cli": "^17.1.0",
+    "postcss": "^8.4.31",
+    "postcss-cli": "^10.1.0",
+    "postcss-preset-env": "^9.3.0"
   }
 }

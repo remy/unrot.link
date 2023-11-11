@@ -1,3 +1,4 @@
+const postcss = require('postcss');
 const markdownIt = require('markdown-it');
 const markdownItAttrs = require('markdown-it-attrs');
 
@@ -13,11 +14,29 @@ md.use(markdownItAttrs, {
   allowedAttributes: [],
 });
 
-module.exports = function (eleventyConfig) {
-  eleventyConfig.addPassthroughCopy('src/static');
-  eleventyConfig.addGlobalData('layout', 'base.njk');
+module.exports = function (config) {
+  config.addTemplateFormats('css');
+  config.addGlobalData('layout', 'base.njk');
+  config.setLibrary('md', md);
 
-  eleventyConfig.setLibrary('md', md);
+  config.addExtension('css', {
+    getData() {
+      return { layout: false };
+    },
+    outputFileExtension: 'css',
+    compile: async (content, path) => {
+      const output = await postcss([require('postcss-preset-env')]).process(
+        content,
+        { from: path }
+      );
+
+      return () => output.css;
+    },
+  });
+
+  config.addPassthroughCopy('src/static', {
+    filter: ['*', '!*.css'],
+  });
 
   return {
     dir: {
