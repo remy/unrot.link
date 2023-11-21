@@ -1,16 +1,22 @@
 /**
  * Redirects the user to a URL based on the `url` query parameter, with optional
  * Wayback Machine support.
+ *
  * If the `referer` header is not present or not approved, the user is redirected
  * to the index page.
+ *
  * If the target URL is not reachable, the user is redirected to the Wayback
  * Machine version of the URL (if available).
+ *
  * If the Wayback Machine version is not available, the user is redirected to the
  * original URL with a 302 status code.
  **/
 import type { Config, Context } from 'https://edge.netlify.com';
 
+const defaultEndpoint = '/';
+const defaultRedirectPage = '/index.html';
 const defaultTimeout = 2000;
+const allowUnapprovedToFollow = true; // set to false if self hosting
 
 const preApproved = ['remysharp.com', 'unrot.link'];
 
@@ -20,11 +26,12 @@ if (Deno.env.get('NETLIFY_DEV')) {
 
 // this is the netlify path config, nothing more
 export const config: Config = {
-  path: '/',
+  path: defaultEndpoint,
 };
 
 function index(req: Request) {
-  return new URL('/index.html', req.url);
+  // if you're running your own version of this, you may not want this redirect
+  return new URL(defaultRedirectPage, req.url);
 }
 
 function approved(referer: string) {
@@ -34,19 +41,15 @@ function approved(referer: string) {
 export default async function (req: Request, { next }: Context) {
   const referer: string = req.headers.get('referer') || '';
 
-  console.log(req.headers, referer);
-
+  // if you landed on this url without a referer, then we'll redirect you to
+  // the defaultRedirectPage
   if (!referer) {
-    console.log('returning homepage');
     return index(req);
   }
 
   const root = new URL(referer);
 
-  if (!approved(referer)) {
-    return Response.redirect('/access', 302);
-  }
-
+  // this lets me work out if you're testing an XHR request (useful for debugging)
   const acceptsHTML = req.headers.get('accept')?.includes('text/html');
 
   // A helper function to generate a response depending on the request accept
@@ -65,25 +68,40 @@ export default async function (req: Request, { next }: Context) {
 
   // Get the URL from the query string parameter 'url'
   const url = new URL(req.url);
+
+  // urlParam will be converted into a "real" url later on and stored in targetUrl
   const urlParam = url.searchParams.get('url');
 
-  // return the index page
+  // require a query `url` param, otherwise we get redirected to the index page
   if (urlParam === null) {
-    console.log(req.url, url, urlParam);
     return index(req);
+  }
+
+  // if there's a query (i.e. we passed the above) but the referer is not approved
+  // then we'll redirect to the visitor to the page they intended to visit.
+  // previously this would send to the the access page, but I'm wary of breaking
+  // people's pages and having an unexpected result.
+  if (!approved(referer)) {
+    if (allowUnapprovedToFollow) {
+      return Response.redirect(urlParam, 302);
+    } else {
+      // if you're not approved, then we'll just return a 204 (no content)
+      return new Response(null, { status: 204 });
+    }
   }
 
   try {
     const res = await next({ sendConditionalRequest: true });
 
-    const useWayback = !!url.searchParams.get('wayback');
+    let useWayback = !!url.searchParams.get('wayback');
+    const originMatch = !!url.searchParams.get('origin-match');
     const timeout = parseInt(
       url.searchParams.get('timeout') || defaultTimeout + '',
       10
     );
 
     if (res.status === 304) {
-      // if the client is has a cached version, just let them do it
+      // if the client (browser) is has a cached version, just let them use it
       return res;
     }
 
@@ -91,19 +109,69 @@ export default async function (req: Request, { next }: Context) {
     try {
       targetUrl = new URL(urlParam);
     } catch (_) {
+      // if the URL can't be parsed properly, redirect the user _back_ to the
+      // site they came from adding the query string for later debugging.
       return redirect(root.toString() + '?bad-url=' + urlParam, 302);
+    }
+
+    // now we'll try to _quickly_ connect to the origin, allowing for a 200ms
+    // timeout (which _should_ be enough). If the connection times out, then
+    // it's very likely the host is down, so we'll use the wayback machine.
+    try {
+      const connectPromise = Deno.connect({
+        hostname: targetUrl.hostname,
+        port: parseInt(targetUrl.port, 10) || 80,
+      });
+      await Promise.race([connectPromise, timeoutPromise(200)]);
+    } catch (_) {
+      // if connect to origin fails/times out, then we'll use the wayback machine
+      useWayback = true;
     }
 
     let status = 0;
 
-    try {
-      if (!useWayback) {
-        // set a 2s timeout (1s was too tight for some sites)
-        const response = await fetchWithTimeout(targetUrl, {}, timeout);
+    // if we're not using the wayback machine, then just try to request the URL
+    if (!useWayback) {
+      try {
+        const response = await fetchWithTimeout(
+          targetUrl,
+          {
+            method: 'HEAD',
+            headers: {
+              'user-agent':
+                'Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)',
+              accept: '*/*',
+            },
+          },
+          timeout
+        );
+
         status = response.status;
+
+        // if we've been redirected, then try to detect for zombie pages
+        if (response.redirected) {
+          const redirectUrl = new URL(response.url);
+          // first, if the origin completely changed, and we don't want origin swaps
+          // let's use the archive
+          if (redirectUrl.hostname !== targetUrl.hostname) {
+            // origin redirect
+            if (originMatch) {
+              status = 404;
+            }
+          }
+
+          // if we redirected and the path is the root (and we weren't looking for
+          // the root) then it's a 404/zombie, even if it's a 200
+          if (redirectUrl.pathname === '/' && targetUrl.pathname !== '/') {
+            status = 404;
+          }
+        }
+      } catch (_) {
+        if (!_.message.includes('404')) {
+          console.log('target request error', targetUrl, _.message);
+        }
+        status = 400;
       }
-    } catch (_) {
-      status = 400;
     }
 
     // Check the status code of the response
@@ -123,19 +191,27 @@ export default async function (req: Request, { next }: Context) {
         waybackUrl += `from=${date.replace(/\D/g, '')}&`;
       }
 
-      // then just take one result (ideally we use -1, but this doesn't
-      // reliably work) - sometimes it gives zero results
-      waybackUrl += `limit=1`;
+      const headers = {
+        'user-agent': 'unrot.link',
+      };
 
-      const waybackResponse = await fetch(waybackUrl, {
-        headers: {
-          'user-agent': 'unrot.link',
-        },
+      // -1 should work to get the latest result, but doesn't always…
+      const waybackResponse = await fetch(waybackUrl + `limit=-1`, {
+        headers,
       });
-      const waybackData = (await waybackResponse.json()) as [
-        string[],
-        string[]
-      ];
+
+      let waybackData = (await waybackResponse.json()) as
+        | [string[], string[]]
+        | [];
+
+      if (waybackData.length === 0) {
+        // do it again, but this time with a limit of 1
+        const waybackResponse = await fetch(waybackUrl + `limit=1`, {
+          headers,
+        });
+
+        waybackData = (await waybackResponse.json()) as [string[], string[]];
+      }
 
       // Check if the Wayback Machine response includes a value of 200
       if (waybackData && waybackData.length > 1 && waybackData[1]) {
@@ -145,7 +221,7 @@ export default async function (req: Request, { next }: Context) {
         );
         return redirect(waybackUrl.toString(), 301);
       } else {
-        // fail: sending 302 to original URL, unknown
+        // fail: sending 302 to original URL, there's no wayback data available
         return redirect(targetUrl.toString(), 302);
       }
     }
@@ -156,7 +232,11 @@ export default async function (req: Request, { next }: Context) {
   }
 }
 
-async function fetchWithTimeout(uri: URL, options = {}, time = 5000) {
+async function fetchWithTimeout(
+  uri: URL,
+  options = {},
+  time = 5000
+): Promise<Response> {
   const controller = new AbortController();
   const config = { ...options, signal: controller.signal };
 
@@ -164,7 +244,12 @@ async function fetchWithTimeout(uri: URL, options = {}, time = 5000) {
 
   try {
     const response = await fetch(uri, config);
+
     if (!response.ok) {
+      if (response.status === 405) {
+        return fetchWithTimeout(uri, { ...options, method: 'GET' }, time);
+      }
+
       throw new Error(`${response.status}: ${response.statusText}`);
     }
     return response;
@@ -178,4 +263,10 @@ async function fetchWithTimeout(uri: URL, options = {}, time = 5000) {
 
     throw new Error(error.message);
   }
+}
+
+function timeoutPromise(ms: number) {
+  return new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('Timeout')), ms)
+  );
 }

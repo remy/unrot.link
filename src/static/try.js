@@ -1,5 +1,14 @@
 const form = document.querySelector('#try-form');
 
+const badUrls = [
+  'http://kiss100.com',
+  'https://haveamint.com',
+  'http://www.new-life.net/st-nick.htm',
+  'http://www.andybudd.com/archives/2006/12/win_an_ipod_nano_with_css_mastery_this_christmas/index.php',
+];
+
+const goodUrls = ['https://remysharp.com'];
+
 async function submit(form) {
   const formData = new FormData(form);
   const searchParams = new URLSearchParams(Object.fromEntries(formData));
@@ -40,8 +49,6 @@ form.addEventListener('submit', (event) => {
 document.querySelector('#try').addEventListener(
   'click',
   (event) => {
-    console.log('try first');
-
     if (event.target.tagName !== 'A') {
       return;
     }

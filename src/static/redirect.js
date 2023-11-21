@@ -1,14 +1,15 @@
 /* eslint-env browser */
 if (globalThis.fetch) {
+  const root = 'http://localhost:8888';
   // check if unrot.link is up using the ping service. It'll return a 206 (empty)
   // if it's up, or throw if it's down. The /ping endpoint is also cached for 1
   // day against the CDN
-  fetch('https://unrot.link/ping', {
+  fetch(root + '/ping', {
     method: 'HEAD',
     mode: 'cors',
   })
     .then((res) => {
-      if (res.status === 206) {
+      if (res.status === 204) {
         document.body.addEventListener(
           'click',
           (event) => {
@@ -37,7 +38,7 @@ if (globalThis.fetch) {
               href = encodeURIComponent(href);
 
               // default to unrot.link with the url
-              target.href = `/?url=${href}`;
+              target.href = root + `/?url=${href}`;
 
               // now check if we have an h-entry, and if we do, try to use the
               // published date
@@ -55,6 +56,10 @@ if (globalThis.fetch) {
           {
             passive: true,
           }
+        );
+      } else {
+        console.log(
+          'unrot.link is not responding correctly - possibly remove this script'
         );
       }
     })

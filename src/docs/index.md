@@ -8,7 +8,7 @@ If the document is no longer online, an archive copy from web.archive.org is ret
 
 ---
 
-This documentation is separated into three areas:
+This documentation is separated into the following areas:
 
 1. Using this [hosted service](/docs/hosted)
 2. [Self hosting](/docs/self-hosted) either this solution or something similar

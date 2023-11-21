@@ -2,4 +2,4 @@
 publish = '_site/'
 
 [dev]
-targetPort = 8082
+targetPort = 8080

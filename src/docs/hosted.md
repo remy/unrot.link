@@ -2,7 +2,7 @@
 
 Using this hosted service is free for use, but you will need to [get access](/access) before it's live to use on your web site.
 
-It's recommended that you host your own version of the client script, which you can [download here](https://unrot.link/static/redirect.js).
+It's recommended that you host your own version of the client script, which you can [download here](/static/redirect.js).
 
 Then initialise the script on your site by adding the following script tag to your site:
 
@@ -22,13 +22,21 @@ In addition, if your web site uses the [h-entry microformat2](https://indieweb.o
 
 If your site doesn't use the `dt-published` property, then the archive copy will be the latest available copy that returned a `200` status code.
 
-Note that you can modify the redirect.js file to discover the timestamp in other ways, or to use a different timestamp altogether. The format is described in the [API](#api) below.
+Note that you can modify the redirect.js file to discover the timestamp in other ways, or to use a different timestamp altogether. The format is described in the [self hosted API](/docs/self-hosted#api).
 
-## API
+## Example using h-entry to show the site at time of publish
 
-This domain, https://unrot.link is the API endpoint for the service. It accepts a single GET request with the following parameters:
+A fictional h-entry post that was published in 2014 and includes a link to the "oOOoh" web site.
 
-- **`url`** *(required)* - the URL to check for link rot
-- **`date`** - the timestamp to use when checking for a web.archive.org copy of the URL. This should be in the format `YYYY-MM-DD HH:MM:SS` (e.g. `2019-01-01 00:00:00` for 1st January 2019 at midnight). If not provided, the latest available copy will be used. Note that the time is not required.
-- **`wayback`** - a boolean to force unrot.link to always return the web.archive.org copy of the URL, even if it's not a 404.
-- **`timeout`** - the number of milliseconds to wait for a response from the given `url` before assuming a failure and moving onto requesting the page from the web.archive.org API. Defaults to 2000 (2 seconds).
+```
+<span class="h-entry">
+  <a href="http://oo00.eu">oo00.eu</a> in
+  <time class="dt-published" datetime="2014-03-01">March 2014</time>
+</span>
+```
+
+<output>
+<span class="h-entry"><a href="http://oo00.eu">oo00.eu</a> in <time class="dt-published" datetime="2014-03-01">March 2014</time></span>
+</output>
+
+<script src="/static/redirect.js"></script>
