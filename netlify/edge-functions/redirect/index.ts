@@ -12,6 +12,7 @@
  * original URL with a 302 status code.
  **/
 import type { Config, Context } from 'https://edge.netlify.com';
+import preApproved from "./approved.json" with { type: "json" };
 
 const defaultEndpoint = '/';
 const defaultRedirectPage = '/index.html';
@@ -19,7 +20,6 @@ const defaultTimeout = 2000;
 const allowUnapprovedToFollow = true; // set to false if self hosting
 const debug = Deno.env.get('NETLIFY_DEV');
 
-const preApproved = ['remysharp.com', 'unrot.link'];
 
 if (Deno.env.get('NETLIFY_DEV')) {
   preApproved.push('localhost');
