@@ -2,6 +2,11 @@
  * @param {Event} target
  */
 function docLinks(event) {
+  if (event.shiftKey || event.metaKey || event.ctrlKey || event.altKey) {
+    // let the browser do it's thing
+    return;
+  }
+
   event.preventDefault();
 
   const trust = `
@@ -28,7 +33,9 @@ function docLinks(event) {
   };
 
   if (event.target.nodeName === 'A') {
-    const text = help[event.target.dataset.id];
+    const input = event.target.closest('label').querySelector('input');
+    input.checked = true;
+    const text = help[input.value];
     document.querySelector(
       '.helper'
     ).innerHTML = `${text}<br><a href="${event.target.href}">Read more here</a>`;

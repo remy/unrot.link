@@ -1,4 +1,4 @@
-# Hosted
+# Hosted service
 
 Using this hosted service is free for use, but you will need to [get access](/access) before it's live to use on your web site.
 
@@ -11,6 +11,18 @@ Then initialise the script on your site by adding the following script tag to yo
 ```
 
 Once initialised, the redirect.js script will progressively enhance any outbound links on your site and route them through this service to check for link rot.
+
+## Why self host the client script?
+
+A few reasons:
+
+1. You have control over scripts running on your pages
+2. If this domain somehow hangs, your site won't be affected
+3. You can modify the script to suit your needs
+
+## What if unrot∙link goes down?
+
+The client script includes an initial, very lightweight, ping to this service. Only when that has replied, does the client script progressively enhance your site.
 
 ## How the client script works
 

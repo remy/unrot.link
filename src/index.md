@@ -1,17 +1,18 @@
 # unrot∙link
 
-This project seeks to reduce [link rot](https://en.m.wikipedia.org/wiki/Link_rot) over time by using the Web Archive as a fallback. It will check clicked links and redirect to the most reliable version.
+## Prevent and reverse link rot with a single script and by falling back on the Web Archive for broken links.
 
-Ideal for blogs and long running web sites that multiple outbound links to the open&nbsp;web.
+Instead of regularly checking your site for broken links, or using a process that regularly crawls to find bad links, this service will only check links when they are clicked using progressive enhancement.
 
 ## How to use this service
 
 What best describes you?
 
-- [I trust this service and want to start using it](/docs/hosted){data-id="trust"}
-- [I'd rather host the solution myself](/docs/self-hosted){data-id="self-hosted"}
-- [I try out it out with some urls](/try){data-id="try-it"}
-- [I want to _know_ how this works?](/docs/how){data-id="how"}
+
+- <label><input name="docs" type="radio" value="trust">[I trust this service and want to start using it](/docs/hosted)</label>
+- <label><input name="docs" type="radio" value="self-hosted">[I'd rather host the solution myself](/docs/self-hosted)</label>
+- <label><input name="docs" type="radio" value="try-it">[I'd like to try out it out with some urls](/try)</label>
+- <label><input name="docs" type="radio" value="how">[I want to know how the internals work](/docs/how)</label>
 {.doc-links}
 
 Make a selection above.{.helper}

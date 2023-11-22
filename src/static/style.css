@@ -112,6 +112,7 @@ input {
 
 input[type='checkbox'],
 input[type='radio'] {
+  margin: 0;
   cursor: pointer;
 }
 
@@ -165,10 +166,14 @@ h1 {
 
 h2 {
   font-size: 1.3rem;
-  line-height: 1.6rem;
+  line-height: 1.8rem;
   color: rgb(148, 146, 146);
   text-align: center;
   margin: 48px 0 24px 0;
+}
+
+h1 + h2 {
+  color: #333;
 }
 
 img {
@@ -350,7 +355,7 @@ nav li a {
   padding: 0;
 
   li {
-    margin: 4px 0;
+    margin: 0;
   }
 
   a {
@@ -359,56 +364,10 @@ nav li a {
     text-decoration: none;
     line-height: 32px;
     position: relative;
-    padding-left: 28px;
-
-    &:before {
-      content: '';
-      display: block;
-      position: absolute;
-      width: 10px;
-      height: 10px;
-      left: 0;
-      top: 1rem;
-      margin-top: -8px;
-      border: 2px solid #717171;
-      background-color: white;
-      border-radius: 8px;
-    }
-
-    &:after {
-      content: '';
-      display: block;
-      position: absolute;
-      width: 0;
-      height: 0;
-      top: 1rem;
-      left: 8px;
-      margin-top: 0;
-      background: #007aff;
-      border-radius: 4px;
-      /* transition: 0.2s ease-in-out; */
-    }
+    padding-left: 8px;
 
     &:hover {
-      color: #616161;
-
-      &:before {
-        border-color: #616161;
-      }
-    }
-    &:active,
-    &:focus {
-      font-weight: bold;
-      &:before {
-        border-color: #007aff;
-      }
-
-      &:after {
-        height: 6px;
-        width: 6px;
-        margin-top: -4px;
-        left: 4px;
-      }
+      text-decoration: underline;
     }
   }
 }
