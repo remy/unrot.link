@@ -139,27 +139,29 @@ export default async function (req: Request, { next }: Context) {
     // now we'll try to _quickly_ connect to the origin, allowing for a 200ms
     // timeout (which _should_ be enough). If the connection times out, then
     // it's very likely the host is down, so we'll use the wayback machine.
-    try {
-      const connectPromise = Deno.connect({
-        hostname: targetUrl.hostname,
-        port: parseInt(targetUrl.port, 10) || 80,
-      });
-      await Promise.race([
-        connectPromise.then((conn) => conn.close()),
-        timeoutPromise(200),
-      ]);
-      if (debug) {
-        console.log('connected to origin');
+    if (!useWayback) {
+      try {
+        const connectPromise = Deno.connect({
+          hostname: targetUrl.hostname,
+          port: parseInt(targetUrl.port, 10) || 80,
+        });
+        await Promise.race([
+          connectPromise.then((conn) => conn.close()),
+          timeoutPromise(200),
+        ]);
+        if (debug) {
+          console.log('connected to origin');
+        }
+      } catch (_) {
+        // if connect to origin fails/times out, then we'll use the wayback machine
+        if (debug) {
+          console.log(
+            'failed to connect to origin - switching to wayback',
+            _.message
+          );
+        }
+        useWayback = true;
       }
-    } catch (_) {
-      // if connect to origin fails/times out, then we'll use the wayback machine
-      if (debug) {
-        console.log(
-          'failed to connect to origin - switching to wayback',
-          _.message
-        );
-      }
-      useWayback = true;
     }
 
     let status = 0;
@@ -209,6 +211,14 @@ export default async function (req: Request, { next }: Context) {
           }
         }
       } catch (_) {
+        status = 400;
+
+        if (_.message.includes('429')) {
+          // too many requests, origin is telling unrot.link to back off
+          // assume they'll let the client reach the origin though
+          status = 200;
+        }
+
         if (debug) {
           console.log(
             'target request error (incl 404)',
@@ -218,7 +228,6 @@ export default async function (req: Request, { next }: Context) {
         } else if (!_.message.includes('404')) {
           console.log('target request error', targetUrl.toString(), _.message);
         }
-        status = 400;
       }
     }
 
