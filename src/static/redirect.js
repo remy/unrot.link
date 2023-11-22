@@ -1,6 +1,7 @@
 /* eslint-env browser */
 if (globalThis.fetch) {
-  const root = 'http://localhost:8888';
+  const root = 'https://unrot.link';
+
   // check if unrot.link is up using the ping service. It'll return a 206 (empty)
   // if it's up, or throw if it's down. The /ping endpoint is also cached for 1
   // day against the CDN
