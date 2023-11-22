@@ -18,7 +18,7 @@ const defaultEndpoint = '/';
 const defaultRedirectPage = '/index.html';
 const defaultTimeout = 2000;
 const allowUnapprovedToFollow = true; // set to false if self hosting
-const debug = Deno.env.get('NETLIFY_DEV');
+const debug = true || Deno.env.get('NETLIFY_DEV');
 
 
 if (Deno.env.get('NETLIFY_DEV')) {
