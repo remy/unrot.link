@@ -4,7 +4,7 @@
 
 Instead of regularly checking your site for broken links, or using a process that regularly crawls to find bad links, this service will only check links when they are clicked using progressive enhancement.
 
-## How to use this service
+## Find out more to get started
 
 What best describes you?
 
