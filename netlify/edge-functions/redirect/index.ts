@@ -17,7 +17,7 @@ const defaultEndpoint = '/';
 const defaultRedirectPage = '/index.html';
 const defaultTimeout = 2000;
 const allowUnapprovedToFollow = true; // set to false if self hosting
-const debug = true;
+const debug = Deno.env.get('NETLIFY_DEV');
 
 const preApproved = ['remysharp.com', 'unrot.link'];
 
