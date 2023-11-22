@@ -14,7 +14,7 @@ Try a URL below to see what unrot will return. You'll see the redirected URL fro
 
 Try some examples: [haveamint.com](https://haveamint.com), [new-life.net/st-nick](http://www.new-life.net/st-nick.htm), [andybudd.com/win_an_ipod...](http://www.andybudd.com/archives/2006/12/win_an_ipod_nano_with_css_mastery_this_christmas/index.php), [remysharp.com](https://remysharp.com) (please [contribute](https://github.com/remy/unrot.link/issues/new){data-ignore="true"} better examples!) {.samples}
 
-You can also see [how  unrot∙link works](/docs/how) specifically when it is dealing with the redirect process.
+You can [easily add the unrot∙link client script](/docs/hosted) to your site to start undoing link rot.
 
 <script src="/static/try.js"></script>
 <script src="/static/redirect.js"></script>
