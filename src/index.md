@@ -2,7 +2,7 @@
 
 ## Prevent and reverse link rot with a single script and by falling back on the Web Archive for broken links.
 
-Instead of regularly checking your site for broken links, or using a process that regularly crawls to find bad links that will constantly be playing catch up - this service will only check for link rot when the link is clicked and using progressive enhancement.
+Instead of regularly checking your site for broken links, or using a process that regularly crawls to find bad links that will constantly be playing catch up - this service will only check for link rot in real-time when the link is clicked and using progressive enhancement.
 
 ## Find out more to get started
 

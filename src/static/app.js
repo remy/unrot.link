@@ -32,14 +32,13 @@ function docLinks(event) {
     how,
   };
 
-  if (event.target.nodeName === 'A') {
-    const input = event.target.closest('label').querySelector('input');
-    input.checked = true;
-    const text = help[input.value];
-    document.querySelector(
-      '.helper'
-    ).innerHTML = `${text}<br><a href="${event.target.href}">Read more here</a>`;
-  }
+  const label = event.target.closest('label');
+  const input = label.querySelector('input');
+  input.checked = true;
+  const text = help[input.value];
+  document.querySelector('.helper').innerHTML = `${text}<br><a href="${
+    label.querySelector('a').href
+  }">Read more here</a>`;
 }
 
 function handler(event) {
