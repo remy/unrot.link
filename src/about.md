@@ -6,7 +6,7 @@ If you would like to support this project, please [donate to the archive.org](ht
 
 If you want to contact there's a few ways:
 
-- For bugs, issues and software feedback: [github](https://github.com/remy/unrot/issues)
+- For bugs, issues and software feedback: [github](https://github.com/remy/unrot.link/issues)
 - For private/offline message: [my website](https://remysharp.com/feedback/?product=unrot.link)
 - To hire me for custom development: [my working details](https://remysharp.com/work)
 
