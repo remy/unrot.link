@@ -63,6 +63,10 @@ p {
 }
 
 output {
+  ol {
+    padding-left: 20px;
+  }
+
   ol,
   ul,
   li {
@@ -510,25 +514,31 @@ form button:disabled {
 fieldset {
   border: 0;
   padding: 0;
-
-  label {
-    margin-left: 20px;
-  }
 }
 
 .field-grid {
   display: grid;
-  grid-template-columns: 150px 1fr;
   gap: 4px;
   justify-items: start;
   align-items: baseline;
+
+  label {
+    margin-left: 0;
+    margin-top: 12px;
+  }
+}
+
+@media screen and (min-width: 680px) {
+  .field-grid {
+    grid-template-columns: 150px 1fr;
+  }
 }
 
 .radio-grid {
   grid-template-columns: 40px 1fr;
 
   label {
-    margin-left: 0;
+    margin-top: 0;
   }
 }
 
