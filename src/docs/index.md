@@ -13,4 +13,6 @@ This documentation is separated into the following areas:
 1. Using this [hosted service](/docs/hosted)
 2. [Self hosting](/docs/self-hosted) either this solution or something similar
 3. Considering [alternative](/docs/alternatives) solutions
-4. Potential [pitfalls](/docs/pitfalls)
+4. [How](/docs/how) the redirect logic works
+5. Potential [pitfalls](/docs/pitfalls)
+6. [Source code](https://github.com/remy/unrot.link)
