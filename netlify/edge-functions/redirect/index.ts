@@ -95,8 +95,11 @@ export default async function (req: Request, { next }: Context) {
   // previously this would send to the the access page, but I'm wary of breaking
   // people's pages and having an unexpected result.
   if (!approved(referer)) {
+    if (debug) {
+      console.log('unapproved referer', referer);
+    }
     if (allowUnapprovedToFollow) {
-      return Response.redirect(urlParam, 302);
+      return Response.redirect(urlParam, 303);
     } else {
       // if you're not approved, then we'll just return a 204 (no content)
       return new Response(null, { status: 204 });
