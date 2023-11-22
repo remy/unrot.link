@@ -3,3 +3,7 @@ publish = '_site/'
 
 [dev]
 targetPort = 8080
+
+[[edge_functions]]
+path = "/static/redirect.js"
+function = "hotlink"
