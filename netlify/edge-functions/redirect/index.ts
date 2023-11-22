@@ -12,14 +12,14 @@
  * original URL with a 302 status code.
  **/
 import type { Config, Context } from 'https://edge.netlify.com';
-import preApproved from "./approved.json" with { type: "json" };
+import preApprovedData from './approved.json' assert { type: 'json' };
 
+const preApproved = preApprovedData as string[];
 const defaultEndpoint = '/';
 const defaultRedirectPage = '/index.html';
 const defaultTimeout = 2000;
 const allowUnapprovedToFollow = true; // set to false if self hosting
 const debug = true || Deno.env.get('NETLIFY_DEV');
-
 
 if (Deno.env.get('NETLIFY_DEV')) {
   preApproved.push('localhost');
@@ -36,7 +36,7 @@ function index(req: Request) {
 }
 
 function approved(referer: string) {
-  return preApproved.some((domain) => referer.includes(domain));
+  return preApproved.some((domain) => referer === domain);
 }
 
 export default async function (req: Request, { next }: Context) {
@@ -94,7 +94,7 @@ export default async function (req: Request, { next }: Context) {
   // then we'll redirect to the visitor to the page they intended to visit.
   // previously this would send to the the access page, but I'm wary of breaking
   // people's pages and having an unexpected result.
-  if (!approved(referer)) {
+  if (!approved(root.hostname)) {
     if (debug) {
       console.log('unapproved referer', referer);
     }

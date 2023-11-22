@@ -5,3 +5,5 @@ For the time being this service requires a brief application to include your dom
 This also means that if there's any reason why this service cannot continue, I'll endeavour to contact you to give you as much notice as possible to deal with the change.
 
 Finally, in addition, the client script also includes a basic test to attempt to mitigate against any failure to this service.
+
+**Note** the `localhost` origin has been pre-approved for testing purposes.
