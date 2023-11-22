@@ -28,7 +28,7 @@ Note that you can modify the redirect.js file to discover the timestamp in other
 
 A fictional h-entry post that was published in 2014 and includes a link to the "oOOoh" web site.
 
-```
+```html
 <span class="h-entry">
   <a href="http://oo00.eu">oo00.eu</a> in
   <time class="dt-published" datetime="2014-03-01">March 2014</time>

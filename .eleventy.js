@@ -1,6 +1,7 @@
 const postcss = require('postcss');
 const markdownIt = require('markdown-it');
 const markdownItAttrs = require('markdown-it-attrs');
+const syntaxHighlight = require('@11ty/eleventy-plugin-syntaxhighlight');
 
 const md = markdownIt({
   html: true,
@@ -15,6 +16,7 @@ md.use(markdownItAttrs, {
 });
 
 module.exports = function (config) {
+  config.addPlugin(syntaxHighlight);
   config.addTemplateFormats('css');
   config.addGlobalData('layout', 'base.njk');
   config.setLibrary('md', md);

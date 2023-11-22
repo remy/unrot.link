@@ -17,6 +17,7 @@ const defaultEndpoint = '/';
 const defaultRedirectPage = '/index.html';
 const defaultTimeout = 2000;
 const allowUnapprovedToFollow = true; // set to false if self hosting
+const debug = true;
 
 const preApproved = ['remysharp.com', 'unrot.link'];
 
@@ -41,6 +42,9 @@ function approved(referer: string) {
 export default async function (req: Request, { next }: Context) {
   const referer: string = req.headers.get('referer') || '';
 
+  const startTime = performance.now();
+  let waybackResponseStart = 0;
+
   // if you landed on this url without a referer, then we'll redirect you to
   // the defaultRedirectPage
   if (!referer) {
@@ -58,11 +62,20 @@ export default async function (req: Request, { next }: Context) {
     if (acceptsHTML) {
       return Response.redirect(url, status);
     } else {
-      return new Response(JSON.stringify({ status, url }), {
-        headers: {
-          'content-type': 'application/json',
-        },
-      });
+      const now = performance.now();
+      return new Response(
+        JSON.stringify({
+          status,
+          url,
+          ms: now - startTime,
+          wayback: waybackResponseStart ? now - waybackResponseStart : -1,
+        }),
+        {
+          headers: {
+            'content-type': 'application/json',
+          },
+        }
+      );
     }
   };
 
@@ -93,17 +106,17 @@ export default async function (req: Request, { next }: Context) {
   try {
     const res = await next({ sendConditionalRequest: true });
 
+    if (res.status === 304) {
+      // if the client (browser) is has a cached version, just let them use it
+      return res;
+    }
+
     let useWayback = !!url.searchParams.get('wayback');
     const originMatch = !!url.searchParams.get('origin-match');
     const timeout = parseInt(
       url.searchParams.get('timeout') || defaultTimeout + '',
       10
     );
-
-    if (res.status === 304) {
-      // if the client (browser) is has a cached version, just let them use it
-      return res;
-    }
 
     let targetUrl = null;
     try {
@@ -114,6 +127,15 @@ export default async function (req: Request, { next }: Context) {
       return redirect(root.toString() + '?bad-url=' + urlParam, 302);
     }
 
+    if (debug) {
+      console.log('request settings', {
+        targetUrl: targetUrl.toString(),
+        useWayback,
+        originMatch,
+        timeout,
+      });
+    }
+
     // now we'll try to _quickly_ connect to the origin, allowing for a 200ms
     // timeout (which _should_ be enough). If the connection times out, then
     // it's very likely the host is down, so we'll use the wayback machine.
@@ -122,9 +144,21 @@ export default async function (req: Request, { next }: Context) {
         hostname: targetUrl.hostname,
         port: parseInt(targetUrl.port, 10) || 80,
       });
-      await Promise.race([connectPromise, timeoutPromise(200)]);
+      await Promise.race([
+        connectPromise.then((conn) => conn.close()),
+        timeoutPromise(200),
+      ]);
+      if (debug) {
+        console.log('connected to origin');
+      }
     } catch (_) {
       // if connect to origin fails/times out, then we'll use the wayback machine
+      if (debug) {
+        console.log(
+          'failed to connect to origin - switching to wayback',
+          _.message
+        );
+      }
       useWayback = true;
     }
 
@@ -146,6 +180,10 @@ export default async function (req: Request, { next }: Context) {
           timeout
         );
 
+        if (debug) {
+          console.log('fetch response', response);
+        }
+
         status = response.status;
 
         // if we've been redirected, then try to detect for zombie pages
@@ -163,12 +201,22 @@ export default async function (req: Request, { next }: Context) {
           // if we redirected and the path is the root (and we weren't looking for
           // the root) then it's a 404/zombie, even if it's a 200
           if (redirectUrl.pathname === '/' && targetUrl.pathname !== '/') {
+            if (debug) {
+              console.log('path redirected to root, flagging as 404');
+            }
+
             status = 404;
           }
         }
       } catch (_) {
-        if (!_.message.includes('404')) {
-          console.log('target request error', targetUrl, _.message);
+        if (debug) {
+          console.log(
+            'target request error (incl 404)',
+            targetUrl.toString(),
+            _.message
+          );
+        } else if (!_.message.includes('404')) {
+          console.log('target request error', targetUrl.toString(), _.message);
         }
         status = 400;
       }
@@ -195,6 +243,8 @@ export default async function (req: Request, { next }: Context) {
         'user-agent': 'unrot.link',
       };
 
+      waybackResponseStart = performance.now();
+
       // -1 should work to get the latest result, but doesn't always…
       const waybackResponse = await fetch(waybackUrl + `limit=-1`, {
         headers,
@@ -211,6 +261,10 @@ export default async function (req: Request, { next }: Context) {
         });
 
         waybackData = (await waybackResponse.json()) as [string[], string[]];
+      }
+
+      if (debug) {
+        console.log('wayback data', waybackData[1]);
       }
 
       // Check if the Wayback Machine response includes a value of 200

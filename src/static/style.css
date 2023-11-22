@@ -15,6 +15,7 @@ html {
   --c-code-fg: #000;
   --c-bg-cta: #fff;
   --c-link: #0d63ff;
+  --f-code: monospace;
 }
 @media (prefers-color-scheme: _dark) {
   html {
@@ -77,12 +78,6 @@ body {
   color: var(--c-text);
 }
 
-@media screen and (min-width: 680px) {
-  body {
-    padding: 16px 0;
-  }
-}
-
 footer {
   /* text-align: center; */
   padding: 0 16px;
@@ -111,7 +106,7 @@ output {
   display: block;
   /* text-align: right; */
   padding: 24px;
-  border: 1px solid black;
+  border: 1px dashed black;
   border-radius: 4px;
   background: #fff;
 }
@@ -254,12 +249,18 @@ pre {
   padding: 8px;
   border-radius: 4px;
   overflow: scroll;
-  /* height: 20vh; */
+  font-family: var(--f-code);
+
+  span {
+    font-family: var(--f-code);
+    font-size: 0.8rem;
+    line-height: 20px;
+  }
 }
 
 code {
-  font-family: 'ubuntu mono', 'Courier New', Courier, monospace;
-  font-size: 1.1rem;
+  font-family: var(--f-code);
+  font-size: 1rem;
   background-color: #ececec;
   outline: 2px solid #ececec;
 }
@@ -267,6 +268,11 @@ code {
 pre code {
   background-color: transparent;
   outline: none;
+}
+
+code[class*='language-'],
+pre[class*='language-'] {
+  font-family: var(--f-code);
 }
 
 ul {
@@ -456,4 +462,19 @@ form button:disabled {
 fieldset {
   border: 0;
   padding: 0;
+}
+
+@media screen and (min-width: 680px) {
+  body {
+    padding: 16px 0;
+  }
+
+  code {
+    font-size: 1.1rem;
+  }
+
+  pre * {
+    font-size: 1rem;
+    line-height: 1.2rem;
+  }
 }

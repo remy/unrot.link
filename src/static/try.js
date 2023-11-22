@@ -31,7 +31,13 @@ async function submit(form) {
 
     document.querySelector('output').innerHTML = `
     <p>Rewritten URL:<br><a href="${json.url}">${json.url}</a></p>
-    <p>Response time: ${delta.toFixed(2)}ms</p>
+    ${
+      json.wayback > 0
+        ? `<p>Wayback response time: ${json.wayback.toFixed(2)}ms</p>`
+        : ''
+    }
+    <p>Server requests: ${json.ms.toFixed(2)}ms</p>
+    <p>Client time: ${delta.toFixed(2)}ms</p>
     `;
   } catch (_) {
     // nop
