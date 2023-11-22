@@ -62,6 +62,14 @@ p {
   margin: 24px 0;
 }
 
+output {
+  ol,
+  ul,
+  li {
+    color: #616161;
+  }
+}
+
 [hidden] {
   display: none !important;
 }
@@ -98,8 +106,20 @@ input {
   background: var(--c-input-bg);
 }
 
+input[type='checkbox'],
+input[type='radio'] {
+  cursor: pointer;
+}
+
 input[type='color']::-webkit-color-swatch {
   border-color: transparent;
+}
+
+input[type='date'],
+input[type='number'] {
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  padding: 4px 8px;
 }
 
 output {
@@ -119,6 +139,15 @@ output p {
   margin: 0px;
   text-wrap: break-word;
   overflow-wrap: anywhere;
+
+  & + p {
+    margin: 8px 0;
+  }
+}
+
+output input[type='url'] {
+  margin-right: 0;
+  margin-left: 0;
 }
 
 h1 {
@@ -175,8 +204,7 @@ img {
 }
 
 input[type='text'],
-input[type='url'],
-input[type='number'] {
+input[type='url'] {
   width: 100%;
   border-radius: 4px;
   border: 1px solid #ccc;
@@ -263,6 +291,13 @@ code {
   font-size: 1rem;
   background-color: #ececec;
   outline: 2px solid #ececec;
+}
+
+p > code,
+strong > code,
+li > code {
+  font-size: 0.9rem;
+  margin: 2px;
 }
 
 pre code {
@@ -404,8 +439,21 @@ nav li a {
 }
 
 label {
+  cursor: pointer;
   color: #717171;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+}
+
+p label {
+  display: inline-flex;
+}
+
+fieldset span label {
+  display: inline;
+  white-space: normal;
+  margin-left: 0;
 }
 
 #pitfalls li {
@@ -462,6 +510,31 @@ form button:disabled {
 fieldset {
   border: 0;
   padding: 0;
+
+  label {
+    margin-left: 20px;
+  }
+}
+
+.field-grid {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: 4px;
+  justify-items: start;
+  align-items: baseline;
+}
+
+.radio-grid {
+  grid-template-columns: 40px 1fr;
+
+  label {
+    margin-left: 0;
+  }
+}
+
+#redirect-result {
+  display: inline-block;
+  padding: 2px;
 }
 
 @media screen and (min-width: 680px) {
@@ -473,8 +546,8 @@ fieldset {
     font-size: 1.1rem;
   }
 
-  pre * {
-    font-size: 1rem;
-    line-height: 1.2rem;
+  pre span {
+    font-size: 0.9rem;
+    line-height: 1.4rem;
   }
 }

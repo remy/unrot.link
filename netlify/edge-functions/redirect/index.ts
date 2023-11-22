@@ -111,8 +111,16 @@ export default async function (req: Request, { next }: Context) {
       return res;
     }
 
-    let useWayback = !!url.searchParams.get('wayback');
-    const originMatch = !!url.searchParams.get('origin-match');
+    let useWayback = url.searchParams.get('wayback') as string | boolean;
+
+    useWayback = useWayback !== 'false' && useWayback !== '0' && useWayback;
+
+    let originMatch = !!url.searchParams.get('origin-match') as
+      | string
+      | boolean;
+
+    originMatch = originMatch !== 'false' && originMatch !== '0' && originMatch;
+
     const timeout = parseInt(
       url.searchParams.get('timeout') || defaultTimeout + '',
       10
@@ -255,9 +263,12 @@ export default async function (req: Request, { next }: Context) {
       waybackResponseStart = performance.now();
 
       // -1 should work to get the latest result, but doesn't always…
-      const waybackResponse = await fetch(waybackUrl + `limit=-1`, {
-        headers,
-      });
+      const waybackResponse = await fetch(
+        waybackUrl + `limit=${date ? '1' : '-1'}`,
+        {
+          headers,
+        }
+      );
 
       let waybackData = (await waybackResponse.json()) as
         | [string[], string[]]
@@ -273,7 +284,7 @@ export default async function (req: Request, { next }: Context) {
       }
 
       if (debug) {
-        console.log('wayback data', waybackData[1]);
+        console.log('wayback data', waybackUrl, waybackData[1]);
       }
 
       // Check if the Wayback Machine response includes a value of 200

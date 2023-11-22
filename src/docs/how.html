@@ -1,0 +1,155 @@
+<h1>How unrot∙link works</h1>
+
+<p>This interactive document explains the steps that the redirection server side script takes to determine the best URL
+  to use.</p>
+
+<div data-step="1">
+  <output>
+    <fieldset>
+      <legend>Request options</legend>
+      <div class="field-grid">
+        <label for="url">URL to check:</label><input type="url" id="url" required value=""></label>
+        <label for="wayback">wayback</label> <span><input type="checkbox" name="wayback" id="wayback"> <label
+            for="wayback">skip 404
+            check
+            and always use wayback</label></span>
+        <label for="origin">origin-match</label> <span><input type="checkbox" name="origin-match" id="origin"> <label
+            for="origin">if the
+            target url responds with a different origin, use wayback</label></span>
+        <label for="date">date</label> <input type="date" name="date" id="date">
+        <label for="timeout">timeout (ms)</label> <input type="number" name="timeout" value="2000" id="timeout">
+      </div>
+    </fieldset>
+    <br>
+    <p>After being submitted, the params go through validation before the redirect logic starts.</p>
+  </output>
+
+  <p><button>Next step</button></p>
+</div>
+
+<div hidden data-step="check-connect">
+  <output>
+    <p>Attempt to connect to the origin with a timeout of 200ms.</p>
+    <p>If the timeout triggers, force the use of the wayback and don't try to check if the <code>url</code> is
+      responding.</p>
+    <fieldset>
+      <p>Did the origin connection succeed? <label><input type="radio" name="origin-check-ok" checked value="y">
+          yes</label>
+        <label><input type="radio" name="origin-check-ok" value="n"> no</label>
+      </p>
+    </fieldset>
+    <p><a
+        href="https://github.com/remy/unrot.link/blob/b4f71fe4ac28c1b698967af68fe29ab0cb30504e/netlify/edge-functions/redirect/index.ts#L142-L163">Source</a>
+    </p>
+  </output>
+
+  <p><button>Next step</button></p>
+</div>
+
+<div hidden data-step="fetch">
+  <output>
+    <ol>
+      <li>Fetch a <code>HEAD</code> request for the <code>url</code></li>
+      <li>If the <code>HEAD</code> returns a <code>405</code> request again using <code>GET</code></li>
+      <li>Allow for <code>timeout</code> milliseconds for a response</li>
+    </ol>
+    <fieldset>
+      <legend>How did the fetch respond?</legend>
+      <div class="field-grid radio-grid">
+        <input id="200" type="radio" name="fetch-status" value="200"><label for="200">200 OK</label>
+        <input id="404" type="radio" name="fetch-status" value="404"><label for="404">404 Not found</label>
+        <input id="429" type="radio" name="fetch-status" value="429"><label for="429">429 Too many requests</label>
+        <input id="redirected" type="radio" name="fetch-status" value="redirect"><label
+          for="redirected">Redirected</label>
+        <input id="request" type="radio" name="fetch-status" value="400"><label for="request">Request not ok</label>
+        <input id="timeout-resp" type="radio" name="fetch-status" value="400"><label for="timeout-resp">Timeout</label>
+      </div>
+    </fieldset>
+    <p><a
+        href="https://github.com/remy/unrot.link/blob/79eeb8a82418a334ca5d6a3576b60f2c55237af7/netlify/edge-functions/redirect/index.ts#L171-L232">Source</a>
+    </p>
+  </output>
+
+  <p><button>Next step</button></p>
+</div>
+
+<div hidden data-step="fetch-redirected">
+  <output>
+    <p>If <code>match-origin</code> is set, check the origin of the redirect (from the target url). If it doesn't match,
+      then use the wayback</p>
+    <p>If the <code>url</code> was redirected to the root of the server (and the <code>url</code> wasn't the root) then
+      treat as a <code>404</code> and use the wayback</p>
+    <p>Otherwise, treat as legitimate and does not require wayback</p>
+    </p>
+
+    <fieldset>
+      <legend>What kind of redirect was it?</legend>
+      <div class="field-grid radio-grid">
+        <input id="redirect-origin" type="radio" name="redirect-type" value="redirect-origin"><label
+          for="redirect-origin">Origin change</label>
+        <input id="redirect-path" type="radio" name="redirect-type" value="redirect-path"><label
+          for="redirect-path">Path change to root</label>
+        <input id="redirect-legit" type="radio" name="redirect-type" value="redirect-legit"><label
+          for="redirect-legit">Legitimate</label>
+      </div>
+    </fieldset>
+
+    <p><a
+        href="https://github.com/remy/unrot.link/blob/79eeb8a82418a334ca5d6a3576b60f2c55237af7/netlify/edge-functions/redirect/index.ts#L192-L212">Source</a>
+    </p>
+
+  </output>
+  <p><button>Next step</button></p>
+
+</div>
+
+
+<div hidden data-step="fetch-200">
+  <output>
+    <p>Redirect the user to the original <code>url</code> with a <code>301</code> "Moved permanently" status&nbsp;code.
+    </p>
+
+    <p><strong>End of logic</strong></p>
+
+    <p><a
+        href="https://github.com/remy/unrot.link/blob/79eeb8a82418a334ca5d6a3576b60f2c55237af7/netlify/edge-functions/redirect/index.ts#L237">Source</a>
+    </p>
+  </output>
+
+</div>
+
+<div hidden data-step="wayback">
+  <output>
+    <p>Use the <a href="https://github.com/internetarchive/wayback">wayback CDX API</a> to query for status code 200 and
+      attempt to collect the latest entry if no date given, and first entry if a date is given.</p>
+
+    <p><a
+        href="https://github.com/remy/unrot.link/blob/b4f71fe4ac28c1b698967af68fe29ab0cb30504e/netlify/edge-functions/redirect/index.ts#L231-L264">Source</a>
+    </p>
+  </output>
+
+  <p><button>Next step</button></p>
+</div>
+
+<div hidden data-step="wayback-result">
+  <output>
+    <p>If the wayback request is successful, redirect the user to the stored URL with <code>301</code> "Moved
+      permanently" status.</p>
+    <p>If it fails, or there's no data for the given <code>url</code>, then the user is redirected to the original
+      <code>url</code> with <code>302</code> "Found" status.
+    </p>
+
+    <p>Given your parameters, the result would redirect to:</p>
+
+    <p><strong><code id="redirect-result">checking…</code></strong></p>
+
+    <p><strong>End of logic</strong></p>
+
+    <p><a
+        href="https://github.com/remy/unrot.link/blob/79eeb8a82418a334ca5d6a3576b60f2c55237af7/netlify/edge-functions/redirect/index.ts#L280-L288">Source</a>
+    </p>
+  </output>
+</div>
+
+
+<script src="/static/how.js"></script>

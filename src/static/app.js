@@ -16,15 +16,15 @@ function docLinks(event) {
     You want to use this service to handle your link rot, but you want to host it yourself. You want to be able to control the service, and you want to be able to run it on your own domain.
   `;
 
-  const alternatives = `
-    You want to research alternative methods to dealing with link rot that don't involve using this service.
+  const how = `
+    You want to understand the mechanics of the redirect process, possibly to build your own or to validate how it works.
   `;
 
   const help = {
     trust,
     'self-hosted': selfHosted,
     'try-it': tryIt,
-    alternatives,
+    how,
   };
 
   if (event.target.nodeName === 'A') {

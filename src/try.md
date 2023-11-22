@@ -1,19 +1,20 @@
 # Try it
 
-Try a URL below to see what unrot will return. You'll see status code and the URL from the query. If JavaScript is disabled, the browser will follow the redirect.
+Try a URL below to see what unrot will return. You'll see the redirected URL from the query and the timings. If JavaScript is disabled, the browser will follow the redirect.
 
 <form id="try-form" action="/" method="get">
   <fieldset class="flex-fields">
     <label for="url">URL: </label>
     <input name="url" id="url" type="url">
     <input name="timeout" type="hidden" value="5000">
-    <!-- <input name="origin-match" type="hidden" value="true"> -->
     <button>Test now</button>
   </fieldset>
 </form>
 <output></output>
 
 Try some examples: [haveamint.com](https://haveamint.com), [new-life.net/st-nick](http://www.new-life.net/st-nick.htm), [andybudd.com/win_an_ipod...](http://www.andybudd.com/archives/2006/12/win_an_ipod_nano_with_css_mastery_this_christmas/index.php), [remysharp.com](https://remysharp.com) (please [contribute](https://github.com/remy/unrot.link/issues/new){data-ignore="true"} better examples!) {.samples}
+
+You can also see [how  unrot∙link works](/docs/how) specifically when it is dealing with the redirect process.
 
 <script src="/static/try.js"></script>
 <script src="/static/redirect.js"></script>
