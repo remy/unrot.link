@@ -1,8 +1,8 @@
 # unrot∙link
 
-## Prevent and reverse link rot with a single script and by falling back on the Web Archive for broken links.
+## Prevent and reverse link rot with a single script
 
-Instead of regularly checking your site for broken links, or using a process that regularly crawls to find bad links that will constantly be playing catch up - this service will only check for link rot in real-time when the link is clicked and using progressive enhancement.
+Using progressive enhancement, unrot∙link will check for link rot in real-time, and fall back to the Web Archive to restore broken links.
 
 ## Find out more to get started
 
