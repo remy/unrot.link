@@ -302,9 +302,8 @@ code {
   outline: 2px solid #ececec;
 }
 
-p > code,
-strong > code,
-li > code {
+p code,
+li code {
   font-size: 0.9rem;
   margin: 2px;
 }

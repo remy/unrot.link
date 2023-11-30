@@ -25,11 +25,16 @@ function docLinks(event) {
     You want to understand the mechanics of the redirect process, possibly to build your own or to validate how it works.
   `;
 
+  const access = `
+    If you've installed the script, but you're not being redirected to the Internet Archive, it's likely you've not been granted access to the service (yet).
+  `;
+
   const help = {
     trust,
     'self-hosted': selfHosted,
     'try-it': tryIt,
     how,
+    access,
   };
 
   const label = event.target.closest('label');

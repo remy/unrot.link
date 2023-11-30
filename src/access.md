@@ -6,4 +6,4 @@ This also means that if there's any reason why this service cannot continue, I'l
 
 Finally, in addition, the client script also includes a basic test to attempt to mitigate against any failure to this service.
 
-**Note** the `localhost` origin has been pre-approved for testing purposes.
+***Note** the `localhost` origin has been pre-approved for testing purposes.*
