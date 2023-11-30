@@ -1,6 +1,6 @@
 <h1>How unrot∙link works</h1>
 
-<p>This interactive document explains the steps that the redirection server side script takes to determine the best URL
+<p>This interactive document explains the steps that the redirection server takes to determine the best URL
   to use.</p>
 
 <div data-step="1">
@@ -51,7 +51,7 @@
   <output>
     <ol>
       <li>Fetch a <code>HEAD</code> request for the <code>url</code></li>
-      <li>If the <code>HEAD</code> returns a <code>405</code> request again using <code>GET</code></li>
+      <li>If the <code>HEAD</code> returns a <code>405</code>, request again using <code>GET</code></li>
       <li>Allow for <code>timeout</code> milliseconds for a response</li>
     </ol>
     <fieldset>
@@ -80,7 +80,7 @@
       then use the Internet Archive</p>
     <p>If the <code>url</code> was redirected to the root of the server (and the <code>url</code> wasn't the root) then
       treat as a <code>404</code> and use the Internet Archive</p>
-    <p>Otherwise, treat as legitimate and does not require Internet Archive</p>
+    <p>Otherwise, treat as legitimate and do not use Internet Archive</p>
     </p>
 
     <fieldset>
