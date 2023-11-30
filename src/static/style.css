@@ -91,11 +91,30 @@ body {
 }
 
 footer {
-  /* text-align: center; */
-  padding: 0 16px;
+  padding: 16px;
+  padding-top: 32px;
 }
 
-footer p {
+footer ul {
+  list-style: none;
+  display: flex;
+  /* gap: 40px; */
+  margin: 0;
+  padding: 0;
+
+  li {
+    margin: 0;
+  }
+
+  li:not(:first-child)::before {
+    content: '//';
+    display: inline-block;
+    margin: 0 20px;
+  }
+}
+
+footer p,
+footer li {
   font-size: 0.9rem;
   color: var(--c-text-dark);
 }
@@ -411,6 +430,11 @@ label {
   white-space: nowrap;
   display: flex;
   align-items: center;
+
+  & > input[type='radio'] {
+    margin-left: 8px;
+    margin-right: 4px;
+  }
 }
 
 p label {

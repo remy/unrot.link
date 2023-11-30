@@ -1,10 +1,12 @@
 # Docs
 
-Link rot is a side effect of the web that can typically affect long running web sites, blogs being a good example of this.
+Link rot is a side effect of the web that can typically affect long running web sites. Blogs especially being a good example of sites that can suffer from link rot.
 
-This service aims to provide a hosted solution that progressively enhances the user experience for your visitors by providing a background check that the particular click link is still online.
+This service aims to provide a hosted solution that progressively enhances the user experience for your visitors by providing a background check to test if the particular click link is still online.
 
-If the document is no longer online, an archive copy from web.archive.org is returned. Optionally the archived copy from the time _your_ content was created can be retrieved for more complete context as to why you linked to that resource in the first place.
+If the document is no longer online, a copy from the Internet Archive is returned.
+
+Optionally the archived copy from the time that _your_ content was created can be retrieved, for a more complete context as to why you linked to that resource in the first place.
 
 ---
 

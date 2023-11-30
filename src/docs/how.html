@@ -9,19 +9,19 @@
       <legend>Request options</legend>
       <div class="field-grid">
         <label for="url">URL to check:</label><input type="url" id="url" required value=""></label>
-        <label for="wayback">wayback</label> <span><input type="checkbox" name="wayback" id="wayback"> <label
+        <label for="wayback">wayback?</label> <span><input type="checkbox" name="wayback" id="wayback"> <label
             for="wayback">skip 404
             check
-            and always use wayback</label></span>
-        <label for="origin">origin-match</label> <span><input type="checkbox" name="origin-match" id="origin"> <label
+            and always use the Internet Archive</label></span>
+        <label for="origin">origin-match?</label> <span><input type="checkbox" name="origin-match" id="origin"> <label
             for="origin">if the
-            target url responds with a different origin, use wayback</label></span>
-        <label for="date">date</label> <input type="date" name="date" id="date">
-        <label for="timeout">timeout (ms)</label> <input type="number" name="timeout" value="2000" id="timeout">
+            target url responds with a different origin, use Internet Archive</label></span>
+        <label for="date">date?</label> <input type="date" name="date" id="date">
+        <label for="timeout">timeout (ms)?</label> <input type="number" name="timeout" value="2000" id="timeout">
       </div>
     </fieldset>
     <br>
-    <p>After being submitted, the params go through validation before the redirect logic starts.</p>
+    <p>After being submitted, the parameters go through validation before the redirect logic starts.</p>
   </output>
 
   <p><button>Next step</button></p>
@@ -30,7 +30,7 @@
 <div hidden data-step="check-connect">
   <output>
     <p>Attempt to connect to the origin with a timeout of 200ms.</p>
-    <p>If the timeout triggers, force the use of the wayback and don't try to check if the <code>url</code> is
+    <p>If the timeout triggers, force the use of the Internet Archive and don't try to check if the <code>url</code> is
       responding.</p>
     <fieldset>
       <p><em>Decide what would happen next in the logic.</em></p>
@@ -77,10 +77,10 @@
 <div hidden data-step="fetch-redirected">
   <output>
     <p>If <code>match-origin</code> is set, check the origin of the redirect (from the target url). If it doesn't match,
-      then use the wayback</p>
+      then use the Internet Archive</p>
     <p>If the <code>url</code> was redirected to the root of the server (and the <code>url</code> wasn't the root) then
-      treat as a <code>404</code> and use the wayback</p>
-    <p>Otherwise, treat as legitimate and does not require wayback</p>
+      treat as a <code>404</code> and use the Internet Archive</p>
+    <p>Otherwise, treat as legitimate and does not require Internet Archive</p>
     </p>
 
     <fieldset>
@@ -134,7 +134,7 @@
 
 <div hidden data-step="wayback-result">
   <output>
-    <p>If the wayback request is successful, redirect the user to the stored URL with <code>301</code> "Moved
+    <p>If the Internet Archive request is successful, redirect the user to the stored URL with <code>301</code> "Moved
       permanently" status.</p>
     <p>If it fails, or there's no data for the given <code>url</code>, then the user is redirected to the original
       <code>url</code> with <code>302</code> "Found" status.
