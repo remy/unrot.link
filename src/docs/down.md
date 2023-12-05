@@ -16,3 +16,9 @@ fetch(root + '/ping', {
 If this doesn't return, then the progressive enhancement doesn't apply. Meaning that your links won't go through unrot.link any more.
 
 This ensures that even if this service disappears in 20 or 30 years time, your site, if left unmodified, will continue to work.
+
+## Domain and status
+
+Upon release, I've renewed the domain for the maximum time (10 years) and at time of writing, the domain will auto-renew on [November 3rd 2033](https://www.whois.com/whois/unrot.link).
+
+Historical status of uptime can be found here: [uptime.unrot.link](https://uptime.unrot.link)
