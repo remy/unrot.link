@@ -1,4 +1,10 @@
 /* eslint-env browser */
+
+/**
+ * This script adds the unrot.link functionality to your site.
+ * To find out more and to add your site to the allow list,
+ * visit https://unrot.link
+ */
 if (globalThis.fetch) {
   const root = 'https://unrot.link';
 
@@ -57,6 +63,11 @@ if (globalThis.fetch) {
           {
             passive: true,
           }
+        );
+      } else if (res.status === 402) {
+        // note - this status is currently unused, but may be added in the future
+        console.log(
+          "unrot.link does not have your site in the allow list. Please visit https://unrot.link/access/ to request access (it's free)."
         );
       } else {
         console.log(

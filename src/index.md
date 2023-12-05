@@ -13,6 +13,7 @@ What best describes you?
 - <label><input name="docs" type="radio" value="self-hosted">[I'd rather host the solution myself](/docs/self-hosted)</label>
 - <label><input name="docs" type="radio" value="try-it">[I'd like to try out it out with some urls](/try)</label>
 - <label><input name="docs" type="radio" value="how">[I want to know how the internals work](/docs/how)</label>
+- <label><input name="docs" type="radio" value="down">[I want to know what happens if/when this site goes down](/docs/down)</label>
 - <label><input name="docs" type="radio" value="access">[I installed the script, but it doesn't work](/access)</label>
 {.doc-links}
 

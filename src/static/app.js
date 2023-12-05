@@ -29,12 +29,17 @@ function docLinks(event) {
     If you've installed the script, but you're not being redirected to the Internet Archive, it's likely you've not been granted access to the service (yet).
   `;
 
+  const down = `
+    The client script has a built in mechanism to detect if the service is down, and if it is, none of the progressive enhancement features will be applied.
+  `;
+
   const help = {
     trust,
     'self-hosted': selfHosted,
     'try-it': tryIt,
     how,
     access,
+    down,
   };
 
   const label = event.target.closest('label');

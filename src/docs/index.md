@@ -15,5 +15,6 @@ This documentation is separated into the following areas:
 1. Using this [hosted service](/docs/hosted)
 2. [Self hosting](/docs/self-hosted) either this solution or something similar
 3. [How](/docs/how) the redirect logic works
+3. What happens if this service is [down or offline](/docs/down)
 4. Potential [pitfalls](/docs/pitfalls)
 5. [Source code](https://github.com/remy/unrot.link)
