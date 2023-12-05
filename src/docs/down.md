@@ -21,4 +21,4 @@ This ensures that even if this service disappears in 20 or 30 years time, your s
 
 Upon release, I've renewed the domain for the maximum time (10 years) and at time of writing, the domain will auto-renew on [November 3rd 2033](https://www.whois.com/whois/unrot.link).
 
-Historical status of uptime can be found here: [uptime.unrot.link](https://uptime.unrot.link)
+Historical status of [uptime can be found here](https://updown.io/bxup).
