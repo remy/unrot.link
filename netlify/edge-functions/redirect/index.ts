@@ -269,9 +269,21 @@ export default async function (req: Request, { next }: Context) {
         }
       );
 
-      let waybackData = (await waybackResponse.json()) as
-        | [string[], string[]]
-        | [];
+      const text = await waybackResponse.text();
+
+      let waybackData: [string[], string[]] | [];
+
+      try {
+        waybackData = JSON.parse(text);
+      } catch (e) {
+        console.log(
+          'failed to parse wayback data: ' +
+            waybackUrl +
+            `limit=${date ? '1' : '-1'}`
+        );
+        console.log(text);
+        throw e;
+      }
 
       if (waybackData.length === 0) {
         // do it again, but this time with a limit of 1
@@ -300,7 +312,7 @@ export default async function (req: Request, { next }: Context) {
     }
   } catch (error) {
     // Handle any errors that occur during the execution
-    console.log('[fail] errored: ' + JSON.stringify(error));
+    console.log('[fail] errored: ' + error.message);
     return redirect(urlParam, 302);
   }
 }
