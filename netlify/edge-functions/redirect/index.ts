@@ -301,7 +301,7 @@ export default async function (req: Request, { next }: Context) {
   } catch (error) {
     // Handle any errors that occur during the execution
     console.log('[fail] errored: ' + JSON.stringify(error));
-    return Response.redirect(urlParam, 302);
+    return redirect(urlParam, 302);
   }
 }
 
