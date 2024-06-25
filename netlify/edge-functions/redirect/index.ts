@@ -125,7 +125,7 @@ export default async function (req: Request, { next }: Context) {
       10
     );
 
-    let targetUrl = null;
+    let targetUrl: null | URL = null;
     try {
       targetUrl = new URL(urlParam);
     } catch (_) {
@@ -300,8 +300,8 @@ export default async function (req: Request, { next }: Context) {
     }
   } catch (error) {
     // Handle any errors that occur during the execution
-    console.log('[fail] errored: ' + error.message);
-    return redirect(root.toString() + '?source=unrot.link-failed', 302);
+    console.log('[fail] errored: ' + JSON.stringify(error));
+    return Response.redirect(urlParam, 302);
   }
 }
 
