@@ -12,12 +12,17 @@
  * original URL with a 302 status code.
  **/
 import type { Config, Context } from 'https://edge.netlify.com';
-import preApprovedData from './approved.json' assert { type: 'json' };
+import preApprovedData from './approved.json' with { type: 'json' };
 
 const preApproved = preApprovedData as string[];
 const defaultEndpoint = '/';
 const defaultRedirectPage = '/index.html';
 const defaultTimeout = 2000;
+// how long the archive will wait for the live URL once the archive has already
+// answered - this is the "weight" that favours sending people to the real page
+const defaultGrace = 600;
+// the CDX API can be slow, but not _forever_ slow
+const waybackTimeout = 5000;
 const allowUnapprovedToFollow = true; // set to false if self hosting
 const debug = Deno.env.get('NETLIFY_DEV');
 
@@ -39,7 +44,7 @@ export default async function (req: Request, { next }: Context) {
   const referer: string = req.headers.get('referer') || '';
 
   const startTime = performance.now();
-  let waybackResponseStart = 0;
+  let waybackDuration = -1;
 
   // if you landed on this url without a referer, then we'll redirect you to
   // the defaultRedirectPage
@@ -64,7 +69,7 @@ export default async function (req: Request, { next }: Context) {
           status,
           url,
           ms: now - startTime,
-          wayback: waybackResponseStart ? now - waybackResponseStart : -1,
+          wayback: waybackDuration,
         }),
         {
           headers: {
@@ -125,6 +130,11 @@ export default async function (req: Request, { next }: Context) {
       10
     );
 
+    const grace = parseInt(
+      url.searchParams.get('grace') || defaultGrace + '',
+      10
+    );
+
     let targetUrl: null | URL = null;
     try {
       targetUrl = new URL(urlParam);
@@ -140,199 +150,264 @@ export default async function (req: Request, { next }: Context) {
         useWayback,
         originMatch,
         timeout,
+        grace,
       });
     }
 
-    // now we'll try to _quickly_ connect to the origin, allowing for a 200ms
-    // timeout (which _should_ be enough). If the connection times out, then
-    // it's very likely the host is down, so we'll use the wayback machine.
-    if (!useWayback) {
-      try {
-        const connectPromise = Deno.connect({
-          hostname: targetUrl.hostname,
-          port: parseInt(targetUrl.port, 10) || 80,
-        });
-        await Promise.race([
-          connectPromise.then((conn) => conn.close()),
-          timeoutPromise(200),
-        ]);
-        if (debug) {
-          console.log('connected to origin');
-        }
-      } catch (_) {
-        // if connect to origin fails/times out, then we'll use the wayback machine
-        if (debug) {
-          console.log(
-            'failed to connect to origin - switching to wayback',
-            _.message
-          );
-        }
-        useWayback = true;
+    // Both lookups run at the same time and we take whichever answers first,
+    // rather than only going near the archive once the origin has proven itself
+    // slow. The live URL is weighted: if the archive gets there first we still
+    // hold the door open for `grace` ms in case the origin is just behind it.
+    const waybackStart = performance.now();
+    // lets us cancel the speculative archive lookup if the live URL wins
+    const waybackController = new AbortController();
+    const waybackPromise = lookupWayback(
+      urlParam,
+      url.searchParams.get('date'),
+      waybackController.signal
+    ).then((archived) => {
+      waybackDuration = performance.now() - waybackStart;
+      return archived;
+    });
+
+    // ?wayback means "skip the origin entirely", so resolve it as un-usable
+    const livePromise = useWayback
+      ? Promise.resolve(0)
+      : checkOrigin(targetUrl, timeout, originMatch);
+
+    const first = await Promise.race([
+      livePromise.then((status) => ({ from: 'live', status })),
+      waybackPromise.then(() => ({ from: 'wayback', status: 0 })),
+    ]);
+
+    let status = first.status;
+
+    if (first.from === 'wayback' && !useWayback) {
+      // archive won the race - give the origin its head start before we give up
+      if (debug) {
+        console.log(`wayback answered first, waiting up to ${grace}ms more`);
       }
+      status = await Promise.race([livePromise, resolveAfter(grace, 0)]);
     }
 
-    let status = 0;
-
-    // if we're not using the wayback machine, then just try to request the URL
-    if (!useWayback) {
-      try {
-        const response = await fetchWithTimeout(
-          targetUrl,
-          {
-            method: 'HEAD',
-            headers: {
-              'user-agent':
-                'Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)',
-              accept: '*/*',
-            },
-          },
-          timeout
-        );
-
-        if (debug) {
-          console.log('fetch response', response);
-        }
-
-        status = response.status;
-
-        // if we've been redirected, then try to detect for zombie pages
-        if (response.redirected) {
-          const redirectUrl = new URL(response.url);
-          // first, if the origin completely changed, and we don't want origin swaps
-          // let's use the archive
-          if (redirectUrl.hostname !== targetUrl.hostname) {
-            // origin redirect
-            if (originMatch) {
-              status = 404;
-            }
-          }
-
-          // if we redirected and the path is the root (and we weren't looking for
-          // the root) then it's a 404/zombie, even if it's a 200
-          if (redirectUrl.pathname === '/' && targetUrl.pathname !== '/') {
-            if (debug) {
-              console.log('path redirected to root, flagging as 404');
-            }
-
-            status = 404;
-          }
-        }
-      } catch (_) {
-        status = 400;
-
-        if (_.message.includes('429')) {
-          // too many requests, origin is telling unrot.link to back off
-          // assume they'll let the client reach the origin though
-          status = 200;
-        }
-
-        if (debug) {
-          console.log(
-            'target request error (incl 404)',
-            targetUrl.toString(),
-            _.message
-          );
-        } else if (!_.message.includes('404')) {
-          console.log('target request error', targetUrl.toString(), _.message);
-        }
-      }
+    if (debug) {
+      console.log('race result', { winner: first.from, status });
     }
 
     // Check the status code of the response
     if (status === 200) {
-      // the target page is fine, so redirect to it as a perma-redirect
+      // the target page is fine, so redirect to it as a perma-redirect and
+      // drop the archive lookup we no longer need
+      waybackController.abort();
       return redirect(urlParam, 301);
-    } else {
-      // If the status code is not 200, fetch the Wayback Machine CDX API
-      let waybackUrl = `https://web.archive.org/cdx/search/cdx?output=json&filter=statuscode:200&url=${encodeURIComponent(
-        urlParam
-      )}&`;
-
-      // then add the date of the blog post (if we can from that) to get an
-      // good representative of the page at the time
-      const date = url.searchParams.get('date');
-      if (date) {
-        waybackUrl += `from=${date.replace(/\D/g, '')}&`;
-      }
-
-      const headers = {
-        'user-agent': 'unrot.link',
-      };
-
-      waybackResponseStart = performance.now();
-
-      // -1 should work to get the latest result, but doesn't always…
-      const waybackResponse = await fetch(
-        waybackUrl + `limit=${date ? '1' : '-1'}`,
-        {
-          headers,
-        }
-      );
-
-      const text = await waybackResponse.text();
-
-      let waybackData: [string[], string[]] | [];
-
-      try {
-        waybackData = JSON.parse(text);
-      } catch (e) {
-        console.log(
-          'failed to parse wayback data: ' +
-            waybackUrl +
-            `limit=${date ? '1' : '-1'}`
-        );
-        console.log(text);
-        throw e;
-      }
-
-      if (waybackData.length === 0) {
-        // do it again, but this time with a limit of 1
-        const waybackResponse = await fetch(waybackUrl + `limit=1`, {
-          headers,
-        });
-
-        waybackData = (await waybackResponse.json()) as [string[], string[]];
-      }
-
-      if (debug) {
-        console.log('wayback data', waybackUrl, waybackData[1]);
-      }
-
-      // Check if the Wayback Machine response includes a value of 200
-      if (waybackData && waybackData.length > 1 && waybackData[1]) {
-        // Redirect to the URL from Wayback Machine
-        const waybackUrl = new URL(
-          `https://web.archive.org/web/${waybackData[1][1]}/${waybackData[1][2]}`
-        );
-        return redirect(waybackUrl.toString(), 301);
-      } else {
-        // fail: sending 302 to original URL, there's no wayback data available
-        return redirect(targetUrl.toString(), 302);
-      }
     }
+
+    // the origin is down/rotted/too slow, so use the archive - which by now has
+    // either already landed or is close behind
+    const archived = await waybackPromise;
+
+    if (archived) {
+      // Redirect to the URL from Wayback Machine
+      return redirect(archived, 301);
+    }
+
+    // fail: sending 302 to original URL, there's no wayback data available
+    return redirect(targetUrl.toString(), 302);
   } catch (error) {
     // Handle any errors that occur during the execution
-    console.log('[fail] errored: ' + error.message);
+    console.log('[fail] errored: ' + (error as Error).message);
     return redirect(urlParam, 302);
+  }
+}
+
+/**
+ * Checks whether the live URL is actually serving the page we asked for.
+ * Always resolves - a non-200 result means "use the archive instead".
+ */
+async function checkOrigin(
+  targetUrl: URL,
+  timeout: number,
+  originMatch: boolean | string
+): Promise<number> {
+  try {
+    const response = await fetchWithTimeout(
+      targetUrl,
+      {
+        method: 'HEAD',
+        headers: {
+          'user-agent':
+            'Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)',
+          accept: '*/*',
+        },
+      },
+      timeout
+    );
+
+    if (debug) {
+      console.log('fetch response', response);
+    }
+
+    let status = response.status;
+
+    // we only ever care about the status/redirect chain, so let the body go
+    await response.body?.cancel();
+
+    // if we've been redirected, then try to detect for zombie pages
+    if (response.redirected) {
+      const redirectUrl = new URL(response.url);
+      // first, if the origin completely changed, and we don't want origin swaps
+      // let's use the archive
+      if (redirectUrl.hostname !== targetUrl.hostname) {
+        // origin redirect
+        if (originMatch) {
+          status = 404;
+        }
+      }
+
+      // if we redirected and the path is the root (and we weren't looking for
+      // the root) then it's a 404/zombie, even if it's a 200
+      if (redirectUrl.pathname === '/' && targetUrl.pathname !== '/') {
+        if (debug) {
+          console.log('path redirected to root, flagging as 404');
+        }
+
+        status = 404;
+      }
+    }
+
+    return status;
+  } catch (e) {
+    const _ = e as Error;
+    if (_.message.includes('429')) {
+      // too many requests, origin is telling unrot.link to back off
+      // assume they'll let the client reach the origin though
+      return 200;
+    }
+
+    if (debug) {
+      console.log(
+        'target request error (incl 404)',
+        targetUrl.toString(),
+        _.message
+      );
+    } else if (!_.message.includes('404')) {
+      console.log('target request error', targetUrl.toString(), _.message);
+    }
+
+    return 400;
+  }
+}
+
+/**
+ * Asks the Wayback Machine CDX API for a snapshot of the URL, optionally from
+ * around the date of the post linking to it. Always resolves - null means
+ * "nothing archived".
+ */
+async function lookupWayback(
+  urlParam: string,
+  date: string | null,
+  externalSignal: AbortSignal
+): Promise<string | null> {
+  let waybackUrl = `https://web.archive.org/cdx/search/cdx?output=json&filter=statuscode:200&url=${encodeURIComponent(
+    urlParam
+  )}&`;
+
+  // then add the date of the blog post (if we can from that) to get an
+  // good representative of the page at the time
+  if (date) {
+    waybackUrl += `from=${date.replace(/\D/g, '')}&`;
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), waybackTimeout);
+  // if the live URL got there first, this lookup is dead weight
+  const onExternalAbort = () => controller.abort();
+  externalSignal.addEventListener('abort', onExternalAbort);
+
+  const options = {
+    headers: {
+      'user-agent': 'unrot.link',
+    },
+    signal: controller.signal,
+  };
+
+  try {
+    // -1 should work to get the latest result, but doesn't always…
+    const waybackResponse = await fetch(
+      waybackUrl + `limit=${date ? '1' : '-1'}`,
+      options
+    );
+
+    const text = await waybackResponse.text();
+
+    let waybackData: [string[], string[]] | [];
+
+    try {
+      waybackData = JSON.parse(text);
+    } catch (e) {
+      console.log(
+        'failed to parse wayback data: ' +
+          waybackUrl +
+          `limit=${date ? '1' : '-1'}`
+      );
+      console.log(text);
+      throw e;
+    }
+
+    if (waybackData.length === 0) {
+      // do it again, but this time with a limit of 1
+      const waybackResponse = await fetch(waybackUrl + `limit=1`, options);
+
+      waybackData = (await waybackResponse.json()) as [string[], string[]];
+    }
+
+    if (debug) {
+      console.log('wayback data', waybackUrl, waybackData[1]);
+    }
+
+    // Check if the Wayback Machine response includes a value of 200
+    if (waybackData && waybackData.length > 1 && waybackData[1]) {
+      return new URL(
+        `https://web.archive.org/web/${waybackData[1][1]}/${waybackData[1][2]}`
+      ).toString();
+    }
+
+    return null;
+  } catch (error) {
+    console.log('wayback lookup failed: ' + (error as Error).message);
+    return null;
+  } finally {
+    clearTimeout(timeoutId);
+    externalSignal.removeEventListener('abort', onExternalAbort);
   }
 }
 
 async function fetchWithTimeout(
   uri: URL,
-  options = {},
+  options: RequestInit = {},
   time = 5000
 ): Promise<Response> {
   const controller = new AbortController();
   const config = { ...options, signal: controller.signal };
 
-  setTimeout(() => controller.abort(), time);
+  const started = performance.now();
+  const timeoutId = setTimeout(() => controller.abort(), time);
 
   try {
     const response = await fetch(uri, config);
 
     if (!response.ok) {
-      if (response.status === 405) {
-        return fetchWithTimeout(uri, { ...options, method: 'GET' }, time);
+      // Plenty of sites answer HEAD badly while GET is perfectly healthy -
+      // bsky.app 404s every HEAD, others send 403/405/501 - so a failed HEAD
+      // is never enough on its own to call a page rotted. Retry with GET using
+      // whatever is left of the time budget and believe that instead.
+      if (options.method === 'HEAD') {
+        await response.body?.cancel();
+        return fetchWithTimeout(
+          uri,
+          { ...options, method: 'GET' },
+          Math.max(time - (performance.now() - started), 250)
+        );
       }
 
       throw new Error(`${response.status}: ${response.statusText}`);
@@ -342,16 +417,16 @@ async function fetchWithTimeout(
     // When we abort our `fetch`, the controller conveniently throws
     // a named error, allowing us to handle them separately from
     // other errors.
-    if (error.name === 'AbortError') {
+    if ((error as Error).name === 'AbortError') {
       throw new Error('Response timed out');
     }
 
-    throw new Error(error.message);
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 
-function timeoutPromise(ms: number) {
-  return new Promise((_, reject) =>
-    setTimeout(() => reject(new Error('Timeout')), ms)
-  );
+function resolveAfter<T>(ms: number, value: T): Promise<T> {
+  return new Promise((resolve) => setTimeout(() => resolve(value), ms));
 }
